@@ -2,7 +2,7 @@ module github.com/guessi/docker-parallel-pull
 
 go 1.18
 
-require github.com/docker/docker v20.10.16+incompatible
+require github.com/docker/docker v20.10.17+incompatible
 
 require (
 	github.com/Microsoft/go-winio v0.5.2 // indirect
@@ -21,7 +21,7 @@ require (
 	golang.org/x/net v0.0.0-20220526153639-5463443f8c37 // indirect
 	golang.org/x/sys v0.0.0-20220520151302-bc2c85ada10a // indirect
 	golang.org/x/time v0.0.0-20220224211638-0e9765cccd65 // indirect
-	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 	gotest.tools/v3 v3.1.0 // indirect
 )
 
