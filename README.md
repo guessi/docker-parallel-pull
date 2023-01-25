@@ -1,5 +1,7 @@
-# Simple utility for pulling container images in parallel
+# Pull container images in parallel
 
 ### Usage
 
-    go run ./main.go
+    $ vim ./containers.yaml
+
+    $ go run ./main.go
