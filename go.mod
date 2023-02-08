@@ -3,7 +3,7 @@ module github.com/guessi/docker-parallel-pull
 go 1.19
 
 require (
-	github.com/docker/docker v20.10.23+incompatible
+	github.com/docker/docker v23.0.0+incompatible
 	gopkg.in/yaml.v3 v3.0.1
 )
 
@@ -19,13 +19,11 @@ require (
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.0-rc2 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
-	github.com/sirupsen/logrus v1.9.0 // indirect
-	golang.org/x/mod v0.7.0 // indirect
+	github.com/pmezard/go-difflib v1.0.0 // indirect
+	golang.org/x/mod v0.8.0 // indirect
 	golang.org/x/net v0.5.0 // indirect
-	golang.org/x/sys v0.4.0 // indirect
+	golang.org/x/sys v0.5.0 // indirect
 	golang.org/x/time v0.0.0-20220224211638-0e9765cccd65 // indirect
 	golang.org/x/tools v0.5.0 // indirect
 	gotest.tools/v3 v3.1.0 // indirect
 )
-
-replace gopkg.in/yaml.v3 => gopkg.in/yaml.v3 v3.0.1
