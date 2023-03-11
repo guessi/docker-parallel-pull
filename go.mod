@@ -1,6 +1,6 @@
 module github.com/guessi/docker-parallel-pull
 
-go 1.19
+go 1.20
 
 require (
 	github.com/docker/docker v23.0.1+incompatible
