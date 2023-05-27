@@ -3,7 +3,7 @@ module github.com/guessi/docker-parallel-pull
 go 1.20
 
 require (
-	github.com/docker/docker v23.0.6+incompatible
+	github.com/docker/docker v24.0.2+incompatible
 	gopkg.in/yaml.v3 v3.0.1
 )
 
