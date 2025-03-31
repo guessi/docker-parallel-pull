@@ -1,6 +1,7 @@
 images:
-- alpine:latest
-- alpine:3.17
-- alpine:3.16
-- alpine:3.15
-- alpine:3.14
+- alpine
+- busybox
+- nginx:stable
+- nginx:stable-alpine
+- httpd:2
+- httpd:2-alpine
