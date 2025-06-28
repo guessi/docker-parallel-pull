@@ -4,12 +4,11 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"strings"
 	"sync"
 
-	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/client"
 	"go.yaml.in/yaml/v3"
 )
@@ -18,10 +17,10 @@ var (
 	cleanupAfterTest = true
 	showPullDetail   = true
 
-	imagePullOptions   = types.ImagePullOptions{}
-	imageRemoveOptions = types.ImageRemoveOptions{
-		true, // Force
-		true, // PruneChildren
+	imagePullOptions   = image.PullOptions{}
+	imageRemoveOptions = image.RemoveOptions{
+		Force:         true,
+		PruneChildren: true,
 	}
 )
 
@@ -32,7 +31,7 @@ type ImageList struct {
 func loadContainerImages() []string {
 	var containerImageList ImageList
 
-	yamlFile, err := ioutil.ReadFile("containers.yaml")
+	yamlFile, err := os.ReadFile("containers.yaml")
 	if err != nil {
 		fmt.Printf("failed to load container image list, %v\n", err)
 		os.Exit(1)
