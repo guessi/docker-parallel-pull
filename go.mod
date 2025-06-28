@@ -6,7 +6,7 @@ toolchain go1.24.3
 
 require (
 	github.com/docker/docker v28.1.1+incompatible
-	gopkg.in/yaml.v3 v3.0.1
+	go.yaml.in/yaml/v3 v3.0.3
 )
 
 require (
