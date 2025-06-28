@@ -2,7 +2,7 @@ module github.com/guessi/docker-parallel-pull
 
 go 1.24.0
 
-toolchain go1.24.3
+toolchain go1.24.4
 
 require (
 	github.com/docker/docker v28.1.1+incompatible
