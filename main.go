@@ -3,93 +3,76 @@ package main
 import (
 	"context"
 	"fmt"
-	"io"
+	"log"
 	"os"
-	"strings"
-	"sync"
+	"time"
 
-	"github.com/docker/docker/api/types/image"
-	"github.com/docker/docker/client"
-	"go.yaml.in/yaml/v3"
+	"github.com/guessi/docker-parallel-pull/internal/config"
+	"github.com/guessi/docker-parallel-pull/internal/docker"
+	"github.com/guessi/docker-parallel-pull/internal/output"
 )
-
-var (
-	cleanupAfterTest = true
-	showPullDetail   = true
-
-	imagePullOptions   = image.PullOptions{}
-	imageRemoveOptions = image.RemoveOptions{
-		Force:         true,
-		PruneChildren: true,
-	}
-)
-
-type ImageList struct {
-	Images []string `yaml:"images,omitempty"`
-}
-
-func loadContainerImages() []string {
-	var containerImageList ImageList
-
-	yamlFile, err := os.ReadFile("containers.yaml")
-	if err != nil {
-		fmt.Printf("failed to load container image list, %v\n", err)
-		os.Exit(1)
-	}
-	yaml.Unmarshal(yamlFile, &containerImageList)
-	return containerImageList.Images
-}
-
-func pullImage(wg *sync.WaitGroup, client *client.Client, ctx context.Context, image string) {
-	defer wg.Done()
-
-	r, err := client.ImagePull(ctx, image, imagePullOptions)
-	if err != nil {
-		fmt.Printf("Failed to pull image %s: %v\n", image, err)
-		return
-	}
-	defer r.Close()
-
-	if showPullDetail {
-		io.Copy(os.Stdout, r)
-	}
-}
 
 func main() {
-	ctx := context.Background()
-	cli, err := client.NewClientWithOpts(client.FromEnv)
+	// Check for config file argument
+	configFile := "config.yaml"
+	if len(os.Args) > 1 {
+		configFile = os.Args[1]
+	}
+
+	// Load configuration from file
+	finalConfig, err := config.LoadConfig(configFile)
 	if err != nil {
-		fmt.Printf("Error creating Docker client: %v\n", err)
-		fmt.Println("Please ensure Docker is running and accessible.")
-		os.Exit(1)
+		log.Fatalf("Failed to load config file: %v", err)
 	}
 
-	// Test the connection to Docker daemon
-	_, err = cli.Ping(ctx)
+	// Validate configuration
+	if err := finalConfig.Validate(); err != nil {
+		log.Fatalf("Invalid configuration: %v", err)
+	}
+
+	// Create context with timeout
+	totalTimeout := finalConfig.Timeout * time.Duration(finalConfig.MaxRetries+1) * 2
+	ctx, cancel := context.WithTimeout(context.Background(), totalTimeout)
+	defer cancel()
+
+	// Create Docker client
+	cli, err := docker.CreateDockerClient()
 	if err != nil {
-		fmt.Printf("Cannot connect to Docker daemon: %v\n", err)
-		fmt.Println("Please check if:")
-		fmt.Println("  1. Docker Desktop is running")
-		fmt.Println("  2. Docker daemon is accessible at unix:///var/run/docker.sock")
-		fmt.Println("  3. You have permission to access Docker")
+		log.Fatalf("Failed to create Docker client: %v", err)
+	}
+	defer cli.Close()
+
+	// Test Docker connection
+	if _, err := cli.Ping(ctx); err != nil {
+		log.Fatalf("Cannot connect to Docker daemon: %v\nPlease ensure Docker is running and accessible.", err)
+	}
+
+	// Load container images from file
+	images, err := docker.LoadContainerImages(finalConfig.ContainerFile)
+	if err != nil {
+		log.Fatalf("Failed to load container images: %v", err)
+	}
+
+	output.SecureLogMessage(finalConfig, "INFO",
+		fmt.Sprintf("Found %d images to pull with max concurrency of %d",
+			len(images), finalConfig.MaxConcurrency))
+
+	// Pull images
+	startTime := time.Now()
+	results := docker.PullImages(ctx, cli, images, finalConfig)
+	totalDuration := time.Since(startTime)
+
+	// Calculate and output metrics
+	metrics := output.CalculateMetrics(results, finalConfig, totalDuration)
+	output.OutputResults(metrics, results, finalConfig)
+
+	// Cleanup if requested
+	if finalConfig.CleanupAfterTest {
+		docker.CleanupImages(ctx, cli, images, finalConfig)
+	}
+
+	// Exit with error code if any pulls failed
+	if metrics.FailureCount > 0 {
 		os.Exit(1)
-	}
-
-	var containerImages = loadContainerImages()
-	var wg sync.WaitGroup
-	for _, containerImage := range containerImages {
-		wg.Add(1)
-		go pullImage(&wg, cli, ctx, containerImage)
-	}
-	wg.Wait()
-
-	if cleanupAfterTest {
-		for _, v := range containerImages {
-			if _, err := cli.ImageRemove(ctx, v, imageRemoveOptions); err != nil {
-				if !strings.Contains(err.Error(), "No such image:") {
-					fmt.Printf("%+v\n", err)
-				}
-			}
-		}
 	}
 }

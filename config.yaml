@@ -1,0 +1,9 @@
+container_file: "containers.yaml"
+max_concurrency: 5
+timeout: "5m"
+max_retries: 3
+retry_delay: "2s"
+cleanup_after_test: true
+show_pull_detail: false
+show_progress: true
+output_format: "text"
