@@ -41,25 +41,38 @@ func loadContainerImages() []string {
 }
 
 func pullImage(wg *sync.WaitGroup, client *client.Client, ctx context.Context, image string) {
+	defer wg.Done()
+
 	r, err := client.ImagePull(ctx, image, imagePullOptions)
 	if err != nil {
-		fmt.Printf("%+v\n", err)
-		panic(err)
+		fmt.Printf("Failed to pull image %s: %v\n", image, err)
+		return
 	}
 	defer r.Close()
 
 	if showPullDetail {
 		io.Copy(os.Stdout, r)
 	}
-	wg.Done()
 }
 
 func main() {
 	ctx := context.Background()
 	cli, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
-		fmt.Printf("%+v\n", err)
-		panic(err)
+		fmt.Printf("Error creating Docker client: %v\n", err)
+		fmt.Println("Please ensure Docker is running and accessible.")
+		os.Exit(1)
+	}
+
+	// Test the connection to Docker daemon
+	_, err = cli.Ping(ctx)
+	if err != nil {
+		fmt.Printf("Cannot connect to Docker daemon: %v\n", err)
+		fmt.Println("Please check if:")
+		fmt.Println("  1. Docker Desktop is running")
+		fmt.Println("  2. Docker daemon is accessible at unix:///var/run/docker.sock")
+		fmt.Println("  3. You have permission to access Docker")
+		os.Exit(1)
 	}
 
 	var containerImages = loadContainerImages()
